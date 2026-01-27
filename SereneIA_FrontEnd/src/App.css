@@ -1,0 +1,53 @@
+/* Salud Mental Theme - Diseño calmante y terapéutico */
+
+#root {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Breathing Animation - Para reducir ansiedad */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.breathe-animation {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Gradientes suaves */
+.gradient-calm {
+  background: linear-gradient(135deg, #6B9BD1 0%, #B8A4D4 100%);
+}
+
+.gradient-serenity {
+  background: linear-gradient(135deg, #B8A4D4 0%, #F4A6C3 100%);
+}
+
+.gradient-hope {
+  background: linear-gradient(135deg, #7DD3A0 0%, #78C4D4 100%);
+}
+
+/* Efectos de hover suaves */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(107, 155, 209, 0.2);
+}
+
+/* Focus states accesibles */
+*:focus-visible {
+  outline: 2px solid #6B9BD1;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

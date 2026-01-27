@@ -1,0 +1,120 @@
+volumes:
+  n8n_storage:
+  postgres_storage:
+  qdrant_storage:
+  pgadmin_storage:
+
+networks:
+  SereneIA_Chatbot:
+
+x-n8n: &service-n8n
+  image: n8nio/n8n:latest
+  networks: [SereneIA_Chatbot]
+  environment:
+    # PostgreSQL
+    DB_TYPE: ${DB_TYPE}
+    DB_POSTGRESDB_HOST: ${DB_POSTGRESDB_HOST}
+    DB_POSTGRESDB_PORT: ${DB_POSTGRESDB_PORT}
+    DB_POSTGRESDB_USER: ${DB_POSTGRESDB_USER}
+    DB_POSTGRESDB_PASSWORD: ${DB_POSTGRESDB_PASSWORD}
+    DB_POSTGRESDB_DATABASE: ${DB_POSTGRESDB_DATABASE}
+    # Seguridad
+    N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+    # Configuración
+    N8N_DIAGNOSTICS_ENABLED: ${N8N_DIAGNOSTICS_ENABLED}
+    N8N_PERSONALIZATION_ENABLED: ${N8N_PERSONALIZATION_ENABLED}
+    N8N_RUNNERS_ENABLED: ${N8N_RUNNERS_ENABLED}
+    # Workflows
+    N8N_WORKFLOW_RUN_TIMEOUT: ${N8N_WORKFLOW_RUN_TIMEOUT}
+    N8N_CONCURRENCY_MAIN: ${N8N_CONCURRENCY_MAIN}
+    N8N_MAX_EXECUTION_TIME: ${N8N_MAX_EXECUTION_TIME}
+    # Otros
+    NODE_FUNCTION_ALLOW_BUILTIN: ${NODE_FUNCTION_ALLOW_BUILTIN}
+    NODE_FUNCTION_ALLOW_EXTERNAL: ${NODE_FUNCTION_ALLOW_EXTERNAL}
+    NODE_FUNCTION_ALLOW_CUSTOM: ${NODE_FUNCTION_ALLOW_CUSTOM}
+    GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+    #Deployment
+    N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: ${N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE}
+    N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: true
+
+    TZ: ${TZ}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    hostname: postgres
+    networks:
+      - SereneIA_Chatbot
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # n8n-import:
+  #   <<: *service-n8n
+  #   hostname: n8n-import
+  #   container_name: n8n-import
+  #   entrypoint: /bin/sh
+  #   command: -c "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
+  #   volumes:
+  #     - ./n8n/backup:/backup
+  #   depends_on:
+  #     postgres:
+  # #       condition: service_healthy
+  #   restart: on-failure 
+
+  n8n:
+    <<: *service-n8n
+    hostname: n8n
+    container_name: n8n
+    restart: always
+    ports:
+      - ${N8N_PORT:-5678}:5678
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./n8n/backup:/backup
+      - ./shared:/data/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # n8n-import:
+      #   condition: service_completed_successfully
+
+  qdrant:
+    image: qdrant/qdrant:master
+    hostname: qdrant
+    container_name: qdrant
+    networks: [SereneIA_Chatbot]  
+    restart: always
+    ports:
+      - ${QDRANT_PORT:-6333}:6333
+    volumes:
+      - qdrant_storage:/qdrant/storage
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    networks:
+      - SereneIA_Chatbot
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
+      PGADMIN_CONFIG_COOKIE_DEFAULT_SECURE: "False"
+      PGADMIN_CONFIG_COOKIE_DEFAULT_SAMESITE: "Lax"
+      SCRIPT_NAME: /pgadmin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_storage:/var/lib/pgadmin
+    depends_on:
+      - postgres

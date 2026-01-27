@@ -46,6 +46,8 @@ services:
     networks:
       - SereneIA_Chatbot
     restart: always
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -109,9 +111,9 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
-      PGADMIN_CONFIG_COOKIE_DEFAULT_SECURE: "False"
-      PGADMIN_CONFIG_COOKIE_DEFAULT_SAMESITE: "Lax"
-      SCRIPT_NAME: /pgadmin
+      PGADMIN_CONFIG_COOKIE_SAMESITE: "'Lax'"
+      PGADMIN_CONFIG_SESSION_EXPIRATION_TIME: 43200
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
     ports:
       - "5050:80"
     volumes:

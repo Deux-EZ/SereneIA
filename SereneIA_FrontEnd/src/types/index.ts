@@ -27,6 +27,7 @@ export interface AuthResponse {
 
 export interface LoginPayload {
   username: string;
+  email?: string; // Support both username and email login
   password: string;
 }
 
@@ -44,7 +45,7 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
-  status?: 'sent' | 'pending' | 'failed';
+  status?: 'sent' | 'pending' | 'failed' | 'error';
 }
 
 // Conversation Type - uses Message

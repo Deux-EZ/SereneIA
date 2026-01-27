@@ -177,10 +177,46 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   action,
 }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-center">
-    {icon && <div className="mb-4 text-4xl">{icon}</div>}
-    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
-    <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">{description}</p>
-    {action && <Button onClick={action.onClick}>{action.label}</Button>}
+  <div className="flex flex-col items-center justify-center py-16 px-8 text-center animate-fade-in">
+    {/* Decoración de fondo */}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-200/30 to-pink-200/30 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-amber-200/30 to-rose-200/30 rounded-full blur-3xl"></div>
+    </div>
+    
+    {/* Icono animado */}
+    {icon && (
+      <div className="mb-6 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+        <div className="relative w-24 h-24 bg-gradient-to-br from-amber-50 to-rose-50 rounded-full flex items-center justify-center shadow-xl border border-amber-200/50">
+          <span className="text-5xl animate-float">{icon}</span>
+        </div>
+      </div>
+    )}
+    
+    {/* Título con gradiente */}
+    <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 bg-clip-text text-transparent mb-3">
+      {title}
+    </h3>
+    
+    {/* Descripción */}
+    <p className="text-gray-600 mb-8 max-w-md text-base leading-relaxed">
+      {description}
+    </p>
+    
+    {/* Acción */}
+    {action && (
+      <Button 
+        onClick={action.onClick}
+        className="px-8 py-3 bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 hover:from-purple-600 hover:via-purple-700 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+      >
+        {action.label}
+      </Button>
+    )}
+    
+    {/* Mensaje adicional */}
+    <p className="mt-8 text-sm text-gray-400">
+      Tu espacio seguro para expresarte 💜
+    </p>
   </div>
 );

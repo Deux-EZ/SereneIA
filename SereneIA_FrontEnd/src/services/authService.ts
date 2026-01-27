@@ -1,315 +1,280 @@
-import type { User, LoginPayload, RegisterPayload, AuthResponse } from '../types';
+import { apolloClient } from '../lib/apollo';
+import { LOGIN_MUTATION, REGISTER_MUTATION } from '../graphql/mutations';
+import { ME_QUERY } from '../graphql/queries';
+import type { User, UserPreferences, LoginPayload, RegisterPayload, AuthResponse } from '../types';
 
-// Mock API delay simulator
-const delay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));
+const TOKEN_KEY = 'sereneia_token';
 
-// Mock users database
-const mockUsers: Record<string, User> = {
-  'user1': {
-    id: 'user1',
-    username: 'santiago',
-    email: 'santiago@sereneia.com',
-    avatar: 'https://avatar.iran.liara.run/username?username=santiago',
-    role: 'admin',
+/**
+ * Transform backend user to frontend User type
+ */
+function transformUser(backendUser: any): User {
+  return {
+    id: backendUser.id,
+    username: backendUser.username || backendUser.email.split('@')[0],
+    email: backendUser.email,
+    avatar: `https://avatar.iran.liara.run/username?username=${backendUser.username || 'user'}`,
+    role: backendUser.role || 'user',
     preferences: {
       theme: 'dark',
       language: 'es',
       chatbotTone: 'professional',
       notificationsEnabled: true,
     },
-    createdAt: new Date('2024-01-01').toISOString(),
-    updatedAt: new Date('2025-01-16').toISOString(),
-  },
-};
+    createdAt: backendUser.createdAt,
+    updatedAt: backendUser.createdAt,
+  };
+}
 
 export const authService = {
+  /**
+   * Login with username/email and password
+   * Backend expects: LoginInput { username, password }
+   */
   async login(payload: LoginPayload): Promise<AuthResponse> {
-    await delay();
-    
-    if (payload.username === 'santiago' && payload.password === 'admin123') {
-      const user = mockUsers['user1'];
-      return {
-        success: true,
-        message: 'Logged in successfully',
-        accessToken: 'mock-jwt-token-' + Date.now(),
-        user,
-      };
-    }
-
-    // For demonstration, accept any other credentials as a test user
-    if (payload.password.length >= 6) {
-      const testUser: User = {
-        id: 'user-' + Date.now(),
-        username: payload.username,
-        email: payload.username + '@test.com',
-        avatar: `https://avatar.iran.liara.run/username?username=${payload.username}`,
-        role: 'user',
-        preferences: {
-          theme: 'dark',
-          language: 'es',
-          chatbotTone: 'professional',
-          notificationsEnabled: true,
+    try {
+      const result = await apolloClient.mutate({
+        mutation: LOGIN_MUTATION,
+        variables: {
+          input: {
+            username: payload.email || payload.username, // Backend accepts email in username field
+            password: payload.password,
+          },
         },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
+      });
+
+      const data = result.data as any;
+      if (data?.login) {
+        const { accessToken, user: backendUser } = data.login;
+        const user = transformUser(backendUser);
+
+        // Store the token
+        this.setToken(accessToken);
+
+        return {
+          success: true,
+          message: 'Inicio de sesión exitoso',
+          accessToken,
+          user,
+        };
+      }
+
       return {
-        success: true,
-        message: 'Logged in successfully',
-        accessToken: 'mock-jwt-token-' + Date.now(),
-        user: testUser,
+        success: false,
+        message: 'Error al iniciar sesión',
+      };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return {
+        success: false,
+        message: error.message || 'Credenciales inválidas',
       };
     }
-
-    return {
-      success: false,
-      message: 'Invalid username or password',
-    };
   },
 
+  /**
+   * Register a new user
+   * Backend expects: RegisterInput { email, username, password, full_name }
+   */
   async register(payload: RegisterPayload): Promise<AuthResponse> {
-    await delay();
-
+    // Client-side validation
     if (payload.password !== payload.confirmPassword) {
       return {
         success: false,
-        message: 'Passwords do not match',
+        message: 'Las contraseñas no coinciden',
       };
     }
 
-    if (payload.password.length < 6) {
+    if (payload.password.length < 8) {
       return {
         success: false,
-        message: 'Password must be at least 6 characters',
+        message: 'La contraseña debe tener al menos 8 caracteres',
       };
     }
 
-    const newUser: User = {
-      id: 'user-' + Date.now(),
-      username: payload.username,
-      email: payload.email,
-      avatar: `https://avatar.iran.liara.run/username?username=${payload.username}`,
-      role: 'user',
-      preferences: {
-        theme: 'dark',
-        language: 'es',
-        chatbotTone: 'professional',
-        notificationsEnabled: true,
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      const result = await apolloClient.mutate({
+        mutation: REGISTER_MUTATION,
+        variables: {
+          input: {
+            email: payload.email,
+            username: payload.username,
+            password: payload.password,
+            fullName: payload.username, // Use username as full_name if not provided
+          },
+        },
+      });
 
-    return {
-      success: true,
-      message: 'User registered successfully',
-      accessToken: 'mock-jwt-token-' + Date.now(),
-      user: newUser,
-    };
+      const data = result.data as any;
+      if (data?.register) {
+        const { accessToken, user: backendUser } = data.register;
+        const user = transformUser(backendUser);
+
+        // Store the token
+        this.setToken(accessToken);
+
+        return {
+          success: true,
+          message: 'Usuario registrado exitosamente',
+          accessToken,
+          user,
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Error al registrar usuario',
+      };
+    } catch (error: any) {
+      console.error('Register error:', error);
+      
+      // Extract GraphQL error message
+      let errorMessage = 'Error al registrar usuario';
+      if (error.graphQLErrors && error.graphQLErrors.length > 0) {
+        errorMessage = error.graphQLErrors[0].message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      return {
+        success: false,
+        message: errorMessage,
+      };
+    }
   },
 
+  /**
+   * Logout and clear token
+   */
   async logout(): Promise<void> {
-    await delay(200);
-    // Clear token from localStorage
-    localStorage.removeItem('authToken');
+    localStorage.removeItem(TOKEN_KEY);
+    // Clear Apollo cache on logout
+    await apolloClient.clearStore();
   },
 
+  /**
+   * Get current authenticated user
+   */
   async getCurrentUser(): Promise<User | null> {
-    await delay(300);
-    const token = localStorage.getItem('authToken');
+    const token = this.getToken();
     if (!token) return null;
-    return mockUsers['user1'] || null;
+
+    try {
+      const result = await apolloClient.query({
+        query: ME_QUERY,
+        fetchPolicy: 'network-only', // Always fetch fresh data
+      });
+
+      const data = result.data as any;
+      if (data?.me) {
+        return transformUser(data.me);
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Get current user error:', error);
+      // Token might be invalid, clear it
+      this.clearToken();
+      return null;
+    }
   },
 
+  /**
+   * Store authentication token
+   */
   setToken(token: string): void {
-    localStorage.setItem('authToken', token);
+    localStorage.setItem(TOKEN_KEY, token);
   },
 
+  /**
+   * Get stored authentication token
+   */
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem(TOKEN_KEY);
   },
 
-  async updateUserPreferences(userId: string, preferences: Partial<any>): Promise<AuthResponse> {
-    await delay();
-    const user = mockUsers['user1'];
-    if (user) {
-      user.preferences = { ...user.preferences, ...preferences };
-      user.updatedAt = new Date().toISOString();
+  /**
+   * Clear authentication token
+   */
+  clearToken(): void {
+    localStorage.removeItem(TOKEN_KEY);
+  },
+
+  /**
+   * Verify if token is valid
+   */
+  async verifyToken(_token: string): Promise<boolean> {
+    if (!_token) return false;
+    
+    try {
+      const result = await apolloClient.query({
+        query: ME_QUERY,
+        fetchPolicy: 'network-only',
+      });
+      const data = result.data as any;
+      return !!data?.me;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * Update user preferences (client-side only for now)
+   * TODO: Implement backend mutation when available
+   */
+  async updateUserPreferences(_userId: string, preferences: Partial<UserPreferences>): Promise<AuthResponse> {
+    const user = await this.getCurrentUser();
+    if (user && user.preferences) {
+      user.preferences = { ...user.preferences, ...preferences } as UserPreferences;
       return {
         success: true,
-        message: 'Preferences updated successfully',
+        message: 'Preferencias actualizadas',
         user,
       };
     }
     return {
       success: false,
-      message: 'User not found',
+      message: 'Usuario no encontrado',
     };
   },
 
-  async updateProfile(userId: string, updates: Partial<User>): Promise<AuthResponse> {
-    await delay();
-    const user = mockUsers[userId] || mockUsers['user1'];
-    
-    if (!user) {
-      return {
-        success: false,
-        message: 'User not found',
-      };
-    }
-
-    // Update allowed fields
-    if (updates.username) user.username = updates.username;
-    if (updates.email) user.email = updates.email;
-    if (updates.avatar) user.avatar = updates.avatar;
-    user.updatedAt = new Date().toISOString();
-
-    return {
-      success: true,
-      message: 'Profile updated successfully',
-      user,
-    };
-  },
-
-  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<AuthResponse> {
-    await delay();
-    
-    if (newPassword.length < 6) {
-      return {
-        success: false,
-        message: 'New password must be at least 6 characters',
-      };
-    }
-
-    // Mock validation
-    if (oldPassword !== 'admin123') {
-      return {
-        success: false,
-        message: 'Current password is incorrect',
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Password changed successfully',
-    };
-  },
-
-  async verifyToken(token: string): Promise<boolean> {
-    await delay(100);
-    // Simple mock token validation
-    return token.startsWith('mock-jwt-token-');
-  },
-
-  async refreshToken(): Promise<{ success: boolean; accessToken?: string }> {
-    await delay(300);
-    const currentToken = localStorage.getItem('authToken');
-    
-    if (!currentToken || !currentToken.startsWith('mock-jwt-token-')) {
-      return { success: false };
-    }
-
-    const newToken = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', newToken);
-    
-    return {
-      success: true,
-      accessToken: newToken,
-    };
-  },
-
-  async validateEmail(email: string): Promise<{ valid: boolean; message?: string }> {
-    await delay(200);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!emailRegex.test(email)) {
-      return {
-        valid: false,
-        message: 'Invalid email format',
-      };
-    }
-
-    // Check if email already exists
-    const existingUser = Object.values(mockUsers).find(u => u.email === email);
-    if (existingUser) {
-      return {
-        valid: false,
-        message: 'Email already registered',
-      };
-    }
-
-    return { valid: true };
-  },
-
-  async validateUsername(username: string): Promise<{ valid: boolean; message?: string }> {
-    await delay(200);
-    
-    if (username.length < 3) {
-      return {
-        valid: false,
-        message: 'Username must be at least 3 characters',
-      };
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return {
-        valid: false,
-        message: 'Username can only contain letters, numbers, and underscores',
-      };
-    }
-
-    // Check if username already exists
-    const existingUser = Object.values(mockUsers).find(u => u.username === username);
-    if (existingUser) {
-      return {
-        valid: false,
-        message: 'Username already taken',
-      };
-    }
-
-    return { valid: true };
-  },
-
-  async requestPasswordReset(email: string): Promise<{ success: boolean; message: string }> {
-    await delay(800);
-    
-    const user = Object.values(mockUsers).find(u => u.email === email);
-    if (!user) {
-      // For security, don't reveal if email exists
+  /**
+   * Update user profile (client-side only for now)
+   * TODO: Implement backend mutation when available
+   */
+  async updateProfile(_userId: string, updates: Partial<User>): Promise<AuthResponse> {
+    const user = await this.getCurrentUser();
+    if (user) {
+      if (updates.username) user.username = updates.username;
+      if (updates.email) user.email = updates.email;
+      if (updates.avatar) user.avatar = updates.avatar;
       return {
         success: true,
-        message: 'If the email exists, a password reset link has been sent',
+        message: 'Perfil actualizado',
+        user,
       };
     }
-
     return {
-      success: true,
-      message: 'Password reset link sent to your email',
+      success: false,
+      message: 'Usuario no encontrado',
     };
   },
 
-  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    await delay();
-    
+  /**
+   * Change password (not implemented in backend yet)
+   * TODO: Implement backend mutation when available
+   */
+  async changePassword(_userId: string, _oldPassword: string, newPassword: string): Promise<AuthResponse> {
     if (newPassword.length < 6) {
       return {
         success: false,
-        message: 'Password must be at least 6 characters',
+        message: 'La nueva contraseña debe tener al menos 6 caracteres',
       };
     }
-
-    // Mock token validation
-    if (!token.startsWith('reset-token-')) {
-      return {
-        success: false,
-        message: 'Invalid or expired reset token',
-      };
-    }
-
+    
     return {
       success: true,
-      message: 'Password reset successfully',
+      message: 'Contraseña cambiada exitosamente',
     };
   },
 };

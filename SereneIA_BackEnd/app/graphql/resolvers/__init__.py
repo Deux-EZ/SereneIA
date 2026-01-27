@@ -2,6 +2,11 @@
 Resolvers de GraphQL.
 """
 from app.graphql.resolvers.auth_resolvers import AuthQuery, AuthMutation
-from app.graphql.resolvers.chat_resolvers import ChatQuery, ChatMutation
+from app.graphql.resolvers.conversation_resolvers import ConversationQuery, ConversationMutation
 
-__all__ = ["AuthQuery", "AuthMutation", "ChatQuery", "ChatMutation"]
+__all__ = [
+    "AuthQuery", 
+    "AuthMutation", 
+    "ConversationQuery", 
+    "ConversationMutation"
+]

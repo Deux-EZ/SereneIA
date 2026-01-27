@@ -5,12 +5,19 @@ SereneIA Backend API
 Aplicación FastAPI con GraphQL (Strawberry) para el sistema SereneIA.
 
 Arquitectura:
-- Backend (este): Autenticación, autorización y proxy a N8N
-- N8N: Maneja el chatbot, LLM (Ollama), memoria (Postgres) y RAG (Qdrant)
+- Backend (este): Autenticación, autorización, gestión de conversaciones y proxy a N8N
+- N8N: Maneja el chatbot, LLM (Ollama), memoria de chat (Postgres) y RAG (Qdrant)
 - Frontend: Interfaz de usuario React
 
 Flujo de datos:
 Frontend → GraphQL (Backend) → Webhook (N8N) → AI Agent → Respuesta → Frontend
+
+Tablas en Backend (sereneia_users):
+- users: Autenticación y datos de usuarios
+- conversations: Metadatos de conversaciones (título, fechas, archivado)
+
+Tablas en N8N (n8n):
+- n8n_chat_histories: Mensajes de conversación (session_id = conversation.id)
 """
 from contextlib import asynccontextmanager
 
@@ -19,7 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.core.database import init_database, close_database
+from app.core.init import startup_tasks, shutdown_tasks
 from app.core.exceptions import AppException
 from app.graphql import graphql_router
 
@@ -31,15 +38,16 @@ async def lifespan(app: FastAPI):
     
     Startup:
     - Inicializa tablas de base de datos
+    - Crea usuario administrador por defecto
     
     Shutdown:
     - Cierra conexiones de base de datos
     """
     # Startup
-    await init_database()
+    await startup_tasks()
     yield
     # Shutdown
-    await close_database()
+    await shutdown_tasks()
 
 
 # Crear aplicación FastAPI
@@ -58,12 +66,14 @@ app = FastAPI(
 # Middleware
 # ========================
 
+# CORS debe estar configurado ANTES de montar cualquier ruta
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=["*"],  # Permitir todos los orígenes en desarrollo
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 

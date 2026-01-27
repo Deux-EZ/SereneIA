@@ -8,13 +8,13 @@ from strawberry.types import Info
 from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.graphql.resolvers import AuthQuery, AuthMutation, ChatQuery, ChatMutation
+from app.graphql.resolvers import AuthQuery, AuthMutation, ConversationQuery, ConversationMutation
 from app.core.database import get_db_session
 from app.core.exceptions import AppException
 
 
 @strawberry.type
-class Query(AuthQuery, ChatQuery):
+class Query(AuthQuery, ConversationQuery):
     """
     Query raíz de GraphQL.
     Combina todas las queries de la aplicación.
@@ -27,7 +27,7 @@ class Query(AuthQuery, ChatQuery):
 
 
 @strawberry.type
-class Mutation(AuthMutation, ChatMutation):
+class Mutation(AuthMutation, ConversationMutation):
     """
     Mutation raíz de GraphQL.
     Combina todas las mutations de la aplicación.

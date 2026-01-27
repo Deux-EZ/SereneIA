@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Menu, X, FileText } from 'lucide-react';
+import { LogOut, Menu, X, FileText, User } from 'lucide-react';
 import { Button } from '../components/Common';
 import { useAuth } from '../hooks/useAuth';
 import { useUIStore } from '../store';
@@ -9,13 +9,35 @@ interface MainLayoutProps {
   onShowDocs: () => void;
 }
 
+// Componente Avatar con fallback a icono
+const UserAvatar: React.FC<{ avatar?: string; username?: string }> = ({ avatar, username }) => {
+  const [imgError, setImgError] = useState(false);
+
+  if (!avatar || imgError) {
+    return (
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 flex items-center justify-center ring-2 ring-purple-300 shadow-lg">
+        <User size={20} className="text-white" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={avatar}
+      alt={username || 'Usuario'}
+      className="w-10 h-10 rounded-full ring-2 ring-purple-300 shadow-lg object-cover"
+      onError={() => setImgError(true)}
+    />
+  );
+};
+
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs }) => {
   const { user, logout } = useAuth();
-  const { sidebarOpen, toggleSidebar } = useUIStore();
+  useUIStore(); // Just to maintain store connection
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
 
   const handleLogout = async () => {
-    if (window.confirm('Are you sure you want to log out?')) {
+    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
       await logout();
     }
   };
@@ -40,7 +62,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs }) 
               </svg>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-rose-500 via-amber-500 to-purple-600 bg-clip-text text-transparent">
-              SereneIA
+              SerenAI
             </h1>
           </div>
         </div>
@@ -58,11 +80,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs }) 
             {user && (
               <>
                 <div className="relative">
-                  <img
-                    src={user.avatar}
-                    alt={user.username}
-                    className="w-10 h-10 rounded-full ring-2 ring-rose-400 shadow-lg"
-                  />
+                  <UserAvatar avatar={user.avatar} username={user.username} />
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
                 </div>
                 <span className="text-sm font-semibold text-gray-700">
@@ -70,15 +88,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs }) 
                 </span>
               </>
             )}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               title="Cerrar sesión"
-              className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
             >
               <LogOut size={18} />
-            </Button>
+              <span className="hidden sm:inline text-sm">Salir</span>
+            </button>
           </div>
         </div>
       </header>

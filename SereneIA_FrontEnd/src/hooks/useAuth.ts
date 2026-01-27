@@ -5,10 +5,16 @@ import { authService } from '../services/authService';
 export const useAuth = () => {
   const { user, isAuthenticated, isLoading, error, setUser, logout, setError, setLoading } = useAuthStore();
 
-  const login = async (username: string, password: string) => {
+  const login = async (emailOrUsername: string, password: string) => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await authService.login({ username, password });
+      // Pass email directly - authService handles both email and username
+      const response = await authService.login({ 
+        username: emailOrUsername, 
+        email: emailOrUsername, 
+        password 
+      });
       if (response.success && response.accessToken && response.user) {
         authService.setToken(response.accessToken);
         setUser(response.user);
@@ -18,7 +24,7 @@ export const useAuth = () => {
         return { success: false, error: response.message };
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
+      const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
       setError(message);
       return { success: false, error: message };
     } finally {

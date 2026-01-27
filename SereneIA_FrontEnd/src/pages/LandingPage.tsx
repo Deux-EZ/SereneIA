@@ -13,7 +13,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
   }, []);
 
   return (
-    <div className="min-h-screen overflow-hidden relative bg-gradient-to-br from-amber-50 via-rose-50 to-purple-100">
+    <div className="min-h-screen overflow-y-auto relative bg-gradient-to-br from-amber-50 via-rose-50 to-purple-100">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-br from-pink-300/30 to-rose-400/30 rounded-full blur-3xl animate-float"></div>
@@ -31,7 +31,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
               <Sparkles className="w-5 h-5 text-amber-400 absolute -top-1 -right-1 animate-pulse" />
             </div>
             <span className="text-3xl font-bold bg-gradient-to-r from-rose-500 via-amber-500 to-purple-600 bg-clip-text text-transparent">
-              SereneIA
+              SerenAI
             </span>
           </div>
           <button
@@ -61,7 +61,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              SereneIA es tu espacio seguro impulsado por IA para encontrar paz mental, 
+              SerenAI es tu espacio seguro impulsado por IA para encontrar paz mental, 
               gestionar emociones y construir hábitos saludables que perduran.
             </p>
 
@@ -73,11 +73,70 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
                 <span>Comenzar ahora</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button
-                className="px-8 py-4 bg-white/70 backdrop-blur-sm text-gray-700 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              >
-                Ver cómo funciona
-              </button>
+            </div>
+          </div>
+
+          {/* Chat Example Preview */}
+          <div className={`mt-16 max-w-2xl mx-auto transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
+              {/* Chat Header */}
+              <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 px-6 py-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">SerenAI</h3>
+                  <p className="text-white/80 text-sm">En línea • Tu espacio seguro 💜</p>
+                </div>
+              </div>
+              
+              {/* Chat Messages */}
+              <div className="p-6 space-y-4 bg-gradient-to-b from-amber-50/50 to-rose-50/50">
+                {/* User Message */}
+                <div className="flex justify-end">
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white px-5 py-3 rounded-2xl rounded-tr-sm max-w-[80%] shadow-lg">
+                    <p>Hola, últimamente me he sentido un poco abrumado con el trabajo...</p>
+                  </div>
+                </div>
+                
+                {/* AI Response */}
+                <div className="flex justify-start">
+                  <div className="bg-white px-5 py-3 rounded-2xl rounded-tl-sm max-w-[80%] shadow-lg border border-amber-100">
+                    <p className="text-gray-700">Hola 💜 Gracias por compartir eso conmigo. Es completamente normal sentirse abrumado a veces. <strong>¿Quieres contarme más sobre lo que está pasando?</strong> Estoy aquí para escucharte sin juzgarte.</p>
+                  </div>
+                </div>
+                
+                {/* User Message 2 */}
+                <div className="flex justify-end">
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white px-5 py-3 rounded-2xl rounded-tr-sm max-w-[80%] shadow-lg">
+                    <p>Es que siento que nunca tengo tiempo para mí...</p>
+                  </div>
+                </div>
+                
+                {/* AI Response 2 */}
+                <div className="flex justify-start">
+                  <div className="bg-white px-5 py-3 rounded-2xl rounded-tl-sm max-w-[80%] shadow-lg border border-amber-100">
+                    <p className="text-gray-700">Entiendo perfectamente. Aquí hay algunas ideas que podrían ayudarte:</p>
+                    <ul className="mt-2 space-y-1 text-gray-700">
+                      <li>✨ Agenda 10 minutos solo para ti cada día</li>
+                      <li>🌿 Practica respiración consciente entre tareas</li>
+                      <li>💪 Aprende a decir "no" cuando sea necesario</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Chat Input Preview */}
+              <div className="px-6 py-4 border-t border-amber-100 bg-white/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-3 text-gray-400">
+                    Escribe cómo te sientes hoy... 💭
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                    <ArrowRight className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -146,7 +205,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
             <div className="max-w-3xl mx-auto bg-gradient-to-br from-white/70 to-white/50 backdrop-blur-md rounded-3xl p-10 shadow-xl border border-white/40">
               <Users className="w-12 h-12 text-amber-500 mx-auto mb-6" />
               <p className="text-2xl text-gray-700 italic mb-6 leading-relaxed">
-                "SereneIA me ha ayudado a entender mis emociones y a encontrar paz en momentos difíciles. 
+                "SerenAI me ha ayudado a entender mis emociones y a encontrar paz en momentos difíciles. 
                 Es como tener un amigo que siempre está ahí para escucharte."
               </p>
               <p className="text-gray-600 font-semibold">María G. - Usuario satisfecho</p>
@@ -179,7 +238,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => {
             <Sun className="w-5 h-5" />
           </div>
           <p className="text-sm">
-            © 2026 SereneIA. Cuidando tu bienestar emocional con tecnología e inteligencia artificial.
+            © 2026 SerenAI. Cuidando tu bienestar emocional con tecnología e inteligencia artificial.
           </p>
         </footer>
       </div>

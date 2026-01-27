@@ -12,8 +12,15 @@ from app.graphql.types.auth_types import (
 )
 from app.graphql.types.chat_types import (
     ChatMessagePayload,
+    ChatMessage,
+    MessageType,
+    ConversationType,
+    ConversationPayload,
+    ConversationListPayload,
     HealthStatus,
     SendMessageInput,
+    CreateConversationInput,
+    UpdateConversationInput,
 )
 
 __all__ = [
@@ -27,6 +34,13 @@ __all__ = [
     "ChangePasswordInput",
     # Chat types
     "ChatMessagePayload",
+    "ChatMessage",
+    "MessageType",
+    "ConversationType",
+    "ConversationPayload",
+    "ConversationListPayload",
     "HealthStatus",
     "SendMessageInput",
+    "CreateConversationInput",
+    "UpdateConversationInput",
 ]

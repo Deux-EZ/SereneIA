@@ -3,20 +3,28 @@ Configuración centralizada de la aplicación.
 Usa pydantic-settings para validación y carga de variables de entorno.
 """
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Directorio raíz del proyecto (donde está el .env)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_FILE = BASE_DIR / ".env"
 
 
 class Settings(BaseSettings):
     """
     Configuración de la aplicación cargada desde variables de entorno.
     Sigue el principio 12-factor app para configuración externalizada.
+    
+    El .env se carga automáticamente desde la raíz del proyecto.
+    Las variables de entorno del sistema tienen prioridad sobre el .env.
     """
     
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
@@ -30,9 +38,9 @@ class Settings(BaseSettings):
     # ========================
     # JWT Configuration
     # ========================
-    jwt_secret_key: str = "CAMBIAR_EN_PRODUCCION_usa_openssl_rand_base64_32"
+    jwt_secret_key: str = "Usa_openssl_rand_base64_32"
     jwt_algorithm: str = "HS256"
-    jwt_access_token_expire_minutes: int = 30
+    jwt_access_token_expire_minutes: int = 60  # 1 hora para demos
     jwt_refresh_token_expire_days: int = 7
     
     # ========================
@@ -40,6 +48,7 @@ class Settings(BaseSettings):
     # ========================
     n8n_base_url: str = "http://localhost:5678"
     n8n_webhook_path: str = "/webhook/0d9040d7-6c66-48b7-8ccd-914e8ddfa6a9"
+    n8n_api_key: str = "Usa_openssl_rand_base64_32"
     n8n_timeout_seconds: int = 120  # LLM puede tardar
     
     # ========================

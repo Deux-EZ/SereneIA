@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User as UserIcon, Heart, Sparkles } from 'lucide-react';
+import { Heart, Sparkles } from 'lucide-react';
 import { InputField, Button, Alert } from './Common';
 import { useAuth } from '../hooks/useAuth';
 
@@ -9,8 +9,8 @@ interface AuthFormProps {
 }
 
 export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
-  const [username, setUsername] = useState('santiago');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('admin@sereneia.com'); // Default email for testing
   const [password, setPassword] = useState('admin123');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -20,12 +20,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!username.trim()) newErrors.username = 'Username is required';
-    if (isLogin && !password) newErrors.password = 'Password is required';
-    if (!isLogin) {
-      if (!email.trim()) newErrors.email = 'Email is required';
-      if (!password) newErrors.password = 'Password is required';
-      if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (isLogin) {
+      if (!email.trim()) newErrors.email = 'Email es requerido';
+      if (!password) newErrors.password = 'Contraseña es requerida';
+    } else {
+      if (!username.trim()) newErrors.username = 'Nombre es requerido';
+      if (!email.trim()) newErrors.email = 'Email es requerido';
+      if (!password) newErrors.password = 'Contraseña es requerida';
+      if (password.length < 8) newErrors.password = 'Mínimo 8 caracteres';
+      if (password !== confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
     
     setErrors(newErrors);
@@ -38,14 +41,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
     if (!validateForm()) return;
 
     if (isLogin) {
-      const result = await login(username, password);
+      // Use email for login (username field is used internally for compatibility)
+      const result = await login(email, password);
       if (!result.success) {
-        setErrors({ submit: result.error || 'Login failed' });
+        setErrors({ submit: result.error || 'Error al iniciar sesión' });
       }
     } else {
       const result = await register(username, email, password, confirmPassword);
       if (!result.success) {
-        setErrors({ submit: result.error || 'Registration failed' });
+        setErrors({ submit: result.error || 'Error al registrar usuario' });
       }
     }
   };
@@ -58,7 +62,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
           <Sparkles className="w-6 h-6 text-amber-200" />
         </div>
         <h1 className="text-5xl font-bold bg-gradient-to-r from-rose-500 via-amber-500 to-purple-600 bg-clip-text text-transparent mb-2">
-          SereneIA
+          SerenAI
         </h1>
         <p className="text-gray-700 text-lg font-medium">
           {isLogin ? 'Bienvenido de nuevo 🌸' : 'Comienza tu viaje 🦋'}
@@ -72,27 +76,27 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
         {error && <Alert type="error" message={error} />}
         {errors.submit && <Alert type="error" message={errors.submit} />}
 
-        <InputField
-          label="Usuario"
-          type="text"
-          value={username}
-          onChange={setUsername}
-          placeholder="Tu nombre de usuario"
-          error={errors.username}
-          required
-        />
-
         {!isLogin && (
           <InputField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            placeholder="tu@email.com"
-            error={errors.email}
+            label="Nombre"
+            type="text"
+            value={username}
+            onChange={setUsername}
+            placeholder="Tu nombre"
+            error={errors.username}
             required
           />
         )}
+
+        <InputField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          placeholder="tu@email.com"
+          error={errors.email}
+          required
+        />
 
         <InputField
           label="Contraseña"
@@ -121,9 +125,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
             <Sparkles size={16} className="mt-0.5 flex-shrink-0 text-amber-500" />
             <span>
               {isLogin ? (
-                <>✨ Prueba con: <strong className="text-rose-600">santiago</strong> / <strong className="text-purple-600">admin123</strong></>
+                <>✨ Prueba con: <strong className="text-rose-600">admin@sereneia.com</strong> / <strong className="text-purple-600">admin123</strong></>
               ) : (
-                <>🔐 Usa mínimo 6 caracteres para tu contraseña</>
+                <>🔐 Usa mínimo 8 caracteres para tu contraseña</>
               )}
             </span>
           </p>

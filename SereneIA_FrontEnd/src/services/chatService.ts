@@ -1,181 +1,203 @@
+import { apolloClient } from '../lib/apollo';
+import { CREATE_CONVERSATION, SEND_MESSAGE } from '../graphql/mutations';
+import { GET_CONVERSATIONS, GET_CONVERSATION_HISTORY } from '../graphql/queries';
 import type { Conversation, Message, ChatbotResponse } from '../types';
 
-const delay = (ms: number = 800) => new Promise(resolve => setTimeout(resolve, ms));
+/**
+ * Transform backend conversation to frontend Conversation type
+ * Backend: ConversationType { id, title, lastMessagePreview, createdAt, updatedAt, isArchived }
+ */
+function transformConversation(backendConv: any): Conversation {
+  return {
+    id: backendConv.id,
+    userId: '', // Will be filled from user context
+    title: backendConv.title || 'Nueva conversación',
+    createdAt: backendConv.createdAt,
+    updatedAt: backendConv.updatedAt || backendConv.createdAt,
+    messageCount: 0, // Will be calculated from messages
+  };
+}
 
-// Mock conversations database
-let mockConversations: Conversation[] = [
-  {
-    id: 'conv-1',
-    userId: 'user1',
-    title: 'Consulta sobre integración N8N',
-    createdAt: new Date('2025-01-10').toISOString(),
-    updatedAt: new Date('2025-01-15').toISOString(),
-    messageCount: 5,
-  },
-  {
-    id: 'conv-2',
-    userId: 'user1',
-    title: 'Arquitectura del sistema SereneIA',
-    createdAt: new Date('2025-01-12').toISOString(),
-    updatedAt: new Date('2025-01-14').toISOString(),
-    messageCount: 8,
-  },
-  {
-    id: 'conv-3',
-    userId: 'user1',
-    title: 'Configuración de PostgreSQL',
-    createdAt: new Date('2025-01-13').toISOString(),
-    updatedAt: new Date('2025-01-13').toISOString(),
-    messageCount: 3,
-  },
-];
-
-// Mock messages database
-const mockMessages: Record<string, Message[]> = {
-  'conv-1': [
-    {
-      id: 'msg-1',
-      conversationId: 'conv-1',
-      role: 'user',
-      content: '¿Cómo integro N8N con el backend?',
-      timestamp: new Date('2025-01-10T10:00:00').toISOString(),
-      status: 'sent',
-    },
-    {
-      id: 'msg-2',
-      conversationId: 'conv-1',
-      role: 'assistant',
-      content: 'Para integrar N8N con tu backend FastAPI, necesitas:\n\n1. Crear un webhook en N8N\n2. Configurar los endpoints en FastAPI\n3. Establecer la comunicación por HTTP\n\n¿Necesitas detalles de configuración?',
-      timestamp: new Date('2025-01-10T10:01:00').toISOString(),
-      status: 'sent',
-    },
-  ],
-  'conv-2': [
-    {
-      id: 'msg-3',
-      conversationId: 'conv-2',
-      role: 'user',
-      content: 'Explícame la arquitectura completa de SereneIA',
-      timestamp: new Date('2025-01-12T14:00:00').toISOString(),
-      status: 'sent',
-    },
-    {
-      id: 'msg-4',
-      conversationId: 'conv-2',
-      role: 'assistant',
-      content: 'SereneIA está dividida en tres componentes principales:\n\n📱 **Frontend**: React + TypeScript + Tailwind CSS\n🔧 **Backend**: FastAPI + Strawberry GraphQL + PostgreSQL\n🤖 **Chatbot**: N8N + Ollama (Qwen3:4b) + PostgreSQL\n\nEl flujo es: Frontend → GraphQL → Backend → Webhook → Chatbot → Respuesta\n\n¿Quieres detalles de algún módulo específico?',
-      timestamp: new Date('2025-01-12T14:01:00').toISOString(),
-      status: 'sent',
-    },
-  ],
-  'conv-3': [
-    {
-      id: 'msg-5',
-      conversationId: 'conv-3',
-      role: 'user',
-      content: '¿Cómo configuro PostgreSQL?',
-      timestamp: new Date('2025-01-13T09:00:00').toISOString(),
-      status: 'sent',
-    },
-  ],
-};
-
-// Chatbot responses - simulating AI responses
-const botResponses = [
-  'Excelente pregunta. Te lo explico en detalle...',
-  'Esto es muy importante en la arquitectura de SereneIA. Permíteme desarrollarlo...',
-  'Basándome en los estándares de la aplicación, te recomiendo...',
-  'Considerando la integración con todos los módulos...',
-  'De acuerdo a la documentación técnica...',
-];
+/**
+ * Transform backend message to frontend Message type
+ * Backend: ChatMessage { id, type (HUMAN/AI), content, createdAt }
+ */
+function transformMessage(backendMsg: any, conversationId: string): Message {
+  return {
+    id: String(backendMsg.id),
+    conversationId,
+    role: backendMsg.type === 'AI' ? 'assistant' : 'user',
+    content: backendMsg.content,
+    timestamp: backendMsg.createdAt,
+    status: 'sent',
+  };
+}
 
 export const chatService = {
+  /**
+   * Get all conversations for the current user
+   * Backend returns: ConversationListPayload { conversations, total, hasMore }
+   */
   async getConversations(userId: string): Promise<Conversation[]> {
-    await delay(500);
-    return mockConversations.filter(c => c.userId === userId);
+    try {
+      const result = await apolloClient.query({
+        query: GET_CONVERSATIONS,
+        variables: { limit: 50, offset: 0, includeArchived: false },
+        fetchPolicy: 'network-only', // Always fetch fresh data
+      });
+
+      const data = result.data as any;
+      if (data?.conversations?.conversations) {
+        return data.conversations.conversations.map((conv: any) => ({
+          ...transformConversation(conv),
+          userId,
+        }));
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      return [];
+    }
   },
 
+  /**
+   * Get messages for a specific conversation
+   * Backend returns: ChatMessage[] { id, type, content, createdAt }
+   */
   async getMessages(conversationId: string): Promise<Message[]> {
-    await delay(400);
-    return mockMessages[conversationId] || [];
-  },
+    try {
+      const result = await apolloClient.query({
+        query: GET_CONVERSATION_HISTORY,
+        variables: { conversationId },
+        fetchPolicy: 'network-only',
+      });
 
-  async createConversation(userId: string, firstMessage: string): Promise<Conversation> {
-    await delay(300);
-    const newConversation: Conversation = {
-      id: 'conv-' + Date.now(),
-      userId,
-      title: firstMessage.substring(0, 50) + (firstMessage.length > 50 ? '...' : ''),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messageCount: 1,
-    };
-    mockConversations.push(newConversation);
-    mockMessages[newConversation.id] = [];
-    return newConversation;
-  },
+      const data = result.data as any;
+      if (data?.conversationHistory) {
+        return data.conversationHistory.map((msg: any) => 
+          transformMessage(msg, conversationId)
+        );
+      }
 
-  async sendMessage(conversationId: string, userMessage: string, userId: string): Promise<ChatbotResponse> {
-    await delay(600);
-
-    // Add user message
-    const userMsg: Message = {
-      id: 'msg-' + Date.now(),
-      conversationId,
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-    };
-
-    if (!mockMessages[conversationId]) {
-      mockMessages[conversationId] = [];
+      return [];
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      return [];
     }
-    mockMessages[conversationId].push(userMsg);
-
-    // Simulate bot response
-    await delay(1000);
-    
-    const botResponse: Message = {
-      id: 'msg-' + (Date.now() + 1),
-      conversationId,
-      role: 'assistant',
-      content: `${botResponses[Math.floor(Math.random() * botResponses.length)]} ${userMessage}\n\nEsto es una respuesta simulada del chatbot basada en ${conversationId}. En producción, esto vendría del modelo LLM Ollama Qwen3:4b conectado a través de N8N.`,
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-    };
-
-    mockMessages[conversationId].push(botResponse);
-
-    // Update conversation
-    const conv = mockConversations.find(c => c.id === conversationId);
-    if (conv) {
-      conv.messageCount += 2;
-      conv.updatedAt = new Date().toISOString();
-      conv.lastMessage = botResponse;
-    }
-
-    return {
-      conversationId,
-      message: botResponse,
-      status: 'completed',
-    };
   },
 
+  /**
+   * Create a new conversation
+   * Backend expects: CreateConversationInput { title? }
+   */
+  async createConversation(userId: string, title?: string): Promise<Conversation> {
+    try {
+      const result = await apolloClient.mutate({
+        mutation: CREATE_CONVERSATION,
+        variables: { 
+          input: title ? { title } : null // Input is optional
+        },
+        refetchQueries: [{ query: GET_CONVERSATIONS }],
+      });
+
+      const data = result.data as any;
+      if (data?.createConversation?.conversation) {
+        return {
+          ...transformConversation(data.createConversation.conversation),
+          userId,
+        };
+      }
+
+      throw new Error(data?.createConversation?.message || 'Failed to create conversation');
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Send a message and get AI response
+   * Backend expects: SendMessageInput { conversationId, message }
+   * Backend returns: ChatMessagePayload { success, response, conversationId, error }
+   */
+  async sendMessage(conversationId: string, userMessage: string, _userId: string): Promise<ChatbotResponse> {
+    try {
+      const result = await apolloClient.mutate({
+        mutation: SEND_MESSAGE,
+        variables: {
+          input: {
+            conversationId,
+            message: userMessage,
+          },
+        },
+      });
+
+      const data = result.data as any;
+      if (data?.sendMessage?.success) {
+        const { response } = data.sendMessage;
+        
+        // Return the AI response as a Message object
+        return {
+          conversationId,
+          message: {
+            id: 'ai-' + Date.now(),
+            conversationId,
+            role: 'assistant',
+            content: response || 'No response received',
+            timestamp: new Date().toISOString(),
+            status: 'sent',
+          },
+          status: 'completed',
+        };
+      }
+
+      // Handle error response from backend
+      throw new Error(data?.sendMessage?.error || 'Failed to send message');
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      
+      // Return error response
+      return {
+        conversationId,
+        message: {
+          id: 'error-' + Date.now(),
+          conversationId,
+          role: 'assistant',
+          content: 'Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta nuevamente.',
+          timestamp: new Date().toISOString(),
+          status: 'error',
+        },
+        status: 'completed', // Changed from 'error' to match type
+      };
+    }
+  },
+
+  /**
+   * Delete a conversation
+   */
   async deleteConversation(conversationId: string): Promise<boolean> {
-    await delay(300);
-    mockConversations = mockConversations.filter(c => c.id !== conversationId);
-    delete mockMessages[conversationId];
-    return true;
+    try {
+      const { DELETE_CONVERSATION } = await import('../graphql/mutations');
+      const result = await apolloClient.mutate({
+        mutation: DELETE_CONVERSATION,
+        variables: { conversationId },
+        refetchQueries: [{ query: GET_CONVERSATIONS, variables: { limit: 50, offset: 0, includeArchived: false } }],
+      });
+
+      const data = result.data as any;
+      return data?.deleteConversation?.success || false;
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      return false;
+    }
   },
 
-  async updateConversationTitle(conversationId: string, title: string): Promise<boolean> {
-    await delay(200);
-    const conv = mockConversations.find(c => c.id === conversationId);
-    if (conv) {
-      conv.title = title;
-      return true;
-    }
+  /**
+   * Update conversation title (TODO: implement backend mutation)
+   */
+  async updateConversationTitle(_conversationId: string, _title: string): Promise<boolean> {
+    console.warn('updateConversationTitle not implemented in backend');
     return false;
   },
 };

@@ -6,13 +6,16 @@ Las conversaciones son manejadas por N8N (Postgres Chat Memory).
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, TYPE_CHECKING
 
 from sqlalchemy import String, Boolean, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.conversation import Conversation
 
 
 class UserRole(str, Enum):
@@ -101,6 +104,14 @@ class User(Base):
         onupdate=func.now(),
         nullable=False,
         comment="Fecha de última actualización"
+    )
+    
+    # Relación con conversaciones
+    conversations: Mapped[List["Conversation"]] = relationship(
+        "Conversation",
+        back_populates="user",
+        lazy="selectin",
+        cascade="all, delete-orphan"
     )
     
     def __repr__(self) -> str:

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button } from './Common';
+import { Card } from './Common';
 import { Database, Code, Zap } from 'lucide-react';
 
 interface ModuleCardProps {
@@ -107,7 +107,7 @@ export const ModulesDocumentation: React.FC = () => {
       {/* Título */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
-          Arquitectura de SereneIA
+          Arquitectura de SerenAI
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-lg">
           Sistema modular integrado para procesamiento de lenguaje natural

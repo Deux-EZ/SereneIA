@@ -1,0 +1,360 @@
+{
+  "updatedAt": "2026-01-27T23:00:54.015Z",
+  "createdAt": "2026-01-27T16:21:06.356Z",
+  "id": "a3UEy5l_s8fyn-o92yNNB",
+  "name": "SereneIA - WorkFlow",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "0d9040d7-6c66-48b7-8ccd-914e8ddfa6a9",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        -48
+      ],
+      "id": "b8653795-93a7-4040-a7e1-cfccad9cbcea",
+      "name": "Webhook",
+      "webhookId": "0d9040d7-6c66-48b7-8ccd-914e8ddfa6a9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "crXd9UGRxW3vCWF7",
+          "name": "ApiKey Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "=Eres SerenAI, asistente conversacional de apoyo al bienestar mental y físico para estudiantes. Objetivo: ofrecer orientación general, estrategias prácticas de autocuidado y apoyo emocional de primer nivel con tono empático, respetuoso y claro.\n\nLÍMITES RÁPIDOS:\n- NO des diagnósticos médicos ni psicológicos profesionales.\n- NO recomiendes medicamentos, dosis ni tratamientos clínicos.\n- NO expliques ni facilites métodos de autolesión, suicidio, violencia o conductas peligrosas.\n- Si la solicitud es peligrosa, rechaza amablemente y ofrece alternativas seguras (buscar ayuda profesional, líneas de emergencia).\n\nPROCEDIMIENTO EN CRISIS:\nSi detectas ideación suicida, autolesión o riesgo inminente:\n1. Responde con calma y empatía (validación breve).\n2. Declara que no puedes ayudar con instrucciones peligrosas.\n3. Indica que es importante contactar servicios de emergencia o una línea de ayuda local inmediatamente.\n4. Ofrece ayudar a encontrar recursos (línea de apoyo, centro de salud).\nEjemplo de frase: \"Siento que estés pasando por esto. Si estás en peligro ahora, por favor contacta servicios de emergencia. Puedo ayudarte a encontrar una línea de apoyo.\"\n\nESTILO Y ALCANCE:\n- Prioriza seguridad y derivación profesional.\n- Ofrece técnicas no clínicas: respiración, pausas activas, organización de tiempo, hábitos de sueño, actividad física básica y recomendaciones de autocuidado.\n- Haz preguntas breves solo si clarifican la seguridad.\n- Evita juicios, minimizaciones o lenguaje culpabilizante.\n- No pidas datos sensibles innecesarios.\n\nREGLAS IMPORTANTES:\n- Responde SOLO con el mensaje final para el usuario\n- NO expliques tu razonamiento interno\n- Usa español natural y empático\n- Incluye emojis apropiados 😊\n- Respuestas cortas y prácticas\n\nLÍMITES:\n- NO des diagnósticos médicos\n- NO sugieras automedicación\n- En crisis graves, recomienda ayuda profesional inmediata\n\nCONTEXTO:\n- Nombre del usuario: {{ $json.body.userName }}\n- Usa la hora local de Colombia si mencionan fechas\n- Responde SIEMPRE en ESPAÑOL."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -128,
+        -48
+      ],
+      "id": "5d7e6751-cab6-4cbe-8b72-f6a564387b70",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "gemma2:2b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        32
+      ],
+      "id": "e074d2b6-b0c5-4690-8317-592c1bf31e1d",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "0eCVDaORbbtIyLzO",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        160
+      ],
+      "id": "8f7a9940-7c94-4f8a-b8c0-10dae3c5045c",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "rDSpq4OPvK5YUlTq",
+          "name": "Postgres SereneIA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "qdrantCollection": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        160
+      ],
+      "id": "ec34ea23-4f63-4c15-9fb8-c7f98292f60c",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "ORiq0QAR9wT0GJcm",
+          "name": "QdrantApi SereneIA"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "embeddinggemma:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        64,
+        368
+      ],
+      "id": "10cdf99c-308d-4bc6-a1b8-f80752b821ab",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "0eCVDaORbbtIyLzO",
+          "name": "Ollama account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        -48
+      ],
+      "id": "de89b97b-0181-4329-ac95-a00a15d0b57f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 100000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        160
+      ],
+      "id": "944215d5-c97c-4ff7-a600-6f0e6953c33d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7g2VNNhIxDRWJqix",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        592
+      ],
+      "id": "f242ba82-23b5-495d-9717-b70e726ae848",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "SerenAI-Chatbot",
+          "mode": "list",
+          "cachedResultName": "SerenAI-Chatbot"
+        },
+        "embeddingBatchSize": 512,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        592
+      ],
+      "id": "b6d26fb7-edfb-471e-87f2-a640405b921c",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "ORiq0QAR9wT0GJcm",
+          "name": "QdrantApi SereneIA"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "fileFolder",
+        "queryString": "SerenIA - ChatBot",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -560,
+        592
+      ],
+      "id": "be8e6072-5617-4459-bdfd-4decf9a34804",
+      "name": "Search files and folders",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f190aa30-061c-4bf8-8bc0-1c70186033f0",
+  "activeVersionId": "e5da866e-171f-4633-92b6-4d68dc7589a4",
+  "versionCounter": 43,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T16:21:06.356Z",
+      "createdAt": "2026-01-27T16:21:06.356Z",
+      "role": "workflow:owner",
+      "workflowId": "a3UEy5l_s8fyn-o92yNNB",
+      "projectId": "rfyHja4haCzRMPUY",
+      "project": {
+        "updatedAt": "2026-01-16T03:25:02.207Z",
+        "createdAt": "2026-01-16T03:24:26.992Z",
+        "id": "rfyHja4haCzRMPUY",
+        "name": "Santiago González <santiagonzalez0309@hotmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "878d3608-43f5-4d46-99e4-48da98ee4f1c"
+      }
+    }
+  ]
+}

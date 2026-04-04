@@ -1,3 +1,9 @@
+# Credenciales N8N (encriptadas pero sensibles - NO subir a repositorio)
+n8n/backup/credentials/
+
+# Variables de entorno locales
+.env
+
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 

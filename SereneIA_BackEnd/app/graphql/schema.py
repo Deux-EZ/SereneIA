@@ -63,6 +63,6 @@ async def get_graphql_context(
 graphql_router = GraphQLRouter(
     schema=schema,
     context_getter=get_graphql_context,
-    graphiql=True,  # Habilita GraphiQL en desarrollo
+    graphql_ide="graphiql",  # Habilita GraphiQL en desarrollo
     path="/",
 )

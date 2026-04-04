@@ -54,6 +54,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_storage:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -61,18 +62,19 @@ services:
       retries: 10
       start_period: 10s
 
-  # n8n-import:
-  #   <<: *service-n8n
-  #   hostname: n8n-import
-  #   container_name: n8n-import
-  #   entrypoint: /bin/sh
-  #   command: -c "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
-  #   volumes:
-  #     - ./n8n/backup:/backup
-  #   depends_on:
-  #     postgres:
-  # #       condition: service_healthy
-  #   restart: on-failure 
+  n8n-import:
+    <<: *service-n8n
+    hostname: n8n-import
+    container_name: n8n-import
+    entrypoint: /bin/sh
+    command: -c "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./n8n/backup:/backup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
 
   n8n:
     <<: *service-n8n
@@ -88,8 +90,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      # n8n-import:
-      #   condition: service_completed_successfully
+      n8n-import:
+        condition: service_completed_successfully
 
   qdrant:
     image: qdrant/qdrant:master

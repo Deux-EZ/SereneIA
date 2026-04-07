@@ -7,6 +7,7 @@ import { useUIStore } from '../store';
 interface MainLayoutProps {
   children: React.ReactNode;
   onShowDocs: () => void;
+  onToggleSidebar?: () => void;
 }
 
 // Componente Avatar con fallback a icono
@@ -31,7 +32,7 @@ const UserAvatar: React.FC<{ avatar?: string; username?: string }> = ({ avatar, 
   );
 };
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs }) => {
+export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs, onToggleSidebar }) => {
   const { user, logout } = useAuth();
   useUIStore(); // Just to maintain store connection
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
@@ -46,15 +47,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs }) 
     <div className="flex h-screen bg-transparent">
       {/* Mobile Menu Button */}
       <button
-        onClick={() => setOpenMobileMenu(!openMobileMenu)}
-        className="fixed top-4 left-4 z-50 md:hidden bg-primary text-white p-2 rounded-lg"
+        onClick={() => onToggleSidebar?.()}
+        className="fixed top-4 left-4 z-50 md:hidden bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2.5 rounded-xl shadow-lg"
       >
-        {openMobileMenu ? <X size={24} /> : <Menu size={24} />}
+        <Menu size={22} />
       </button>
 
       {/* Header */}
-      <header className="fixed top-0 right-0 left-0 h-16 bg-white/70 backdrop-blur-md border-b border-amber-200/50 flex items-center justify-between px-6 z-40 shadow-lg">
-        <div className="flex items-center gap-4">
+      <header className="fixed top-0 right-0 left-0 h-16 bg-white/70 backdrop-blur-md border-b border-amber-200/50 flex items-center justify-between px-4 md:px-6 z-40 shadow-lg">
+        <div className="flex items-center gap-4 ml-12 md:ml-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-rose-400 via-amber-400 to-purple-500 rounded-xl shadow-lg animate-breathe">
               <svg className="w-6 h-6 text-white" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +84,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs }) 
                   <UserAvatar avatar={user.avatar} username={user.username} />
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
                 </div>
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="hidden sm:inline text-sm font-semibold text-gray-700">
                   Hola, {user.username} 👋
                 </span>
               </>

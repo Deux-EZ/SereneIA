@@ -20,6 +20,7 @@ function AppContent() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [showDocs, setShowDocs] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -72,6 +73,7 @@ function AppContent() {
   // Handle conversation selection
   const handleSelectConversation = (id: string) => {
     setSelectedConversation(id);
+    setShowSidebar(false); // Close sidebar on mobile after selecting
   };
 
   // Landing page
@@ -91,18 +93,31 @@ function AppContent() {
 
   // Main app (authenticated)
   return (
-    <MainLayout onShowDocs={() => setShowDocs(!showDocs)}>
+    <MainLayout onShowDocs={() => setShowDocs(!showDocs)} onToggleSidebar={() => setShowSidebar(!showSidebar)}>
       {showDocs ? (
         <div className="h-full overflow-y-auto bg-gradient-to-br from-amber-50 via-rose-50 to-purple-50 p-8">
           <ModulesDocumentation />
         </div>
       ) : (
-        <div className="flex h-full">
-          <ConversationList
-            onSelectConversation={handleSelectConversation}
-            selectedId={selectedConversation}
-            onNewConversation={handleNewConversation}
-          />
+        <div className="flex h-full relative">
+          {/* Mobile overlay */}
+          {showSidebar && (
+            <div
+              className="fixed inset-0 bg-black/40 z-20 md:hidden"
+              onClick={() => setShowSidebar(false)}
+            />
+          )}
+          <div className={`
+            fixed md:relative z-30 md:z-auto h-[calc(100vh-4rem)] md:h-auto
+            transition-transform duration-300 ease-in-out
+            ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          `}>
+            <ConversationList
+              onSelectConversation={handleSelectConversation}
+              selectedId={selectedConversation}
+              onNewConversation={handleNewConversation}
+            />
+          </div>
           <ChatWindow conversationId={selectedConversation} />
         </div>
       )}

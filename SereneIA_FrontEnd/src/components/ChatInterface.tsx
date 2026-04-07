@@ -163,7 +163,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       )}
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-transparent via-amber-50/20 to-rose-50/20">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 bg-gradient-to-b from-transparent via-amber-50/20 to-rose-50/20">
         {isLoading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

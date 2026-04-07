@@ -2,6 +2,7 @@
 Servicio de comunicación con N8N.
 Maneja el envío de mensajes al webhook del chatbot.
 """
+import logging
 from typing import Any, Optional
 from dataclasses import dataclass
 
@@ -9,6 +10,8 @@ import httpx
 
 from app.core.config import settings
 from app.core.exceptions import ExternalServiceError
+
+logger = logging.getLogger("sereneia.n8n")
 
 
 @dataclass
@@ -64,6 +67,7 @@ class N8NService:
         
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             try:
+                logger.info(f"[N8N] → POST {self._webhook_url} | session={session_id[:8]}... | msg_len={len(message)}")
                 response = await client.post(
                     self._webhook_url,
                     json=payload,
@@ -73,6 +77,7 @@ class N8NService:
                         "X-API-KEY": settings.n8n_api_key
                     }
                 )
+                logger.info(f"[N8N] ← {response.status_code} | {len(response.content)} bytes")
                 
                 response.raise_for_status()
                 
@@ -120,15 +125,15 @@ class N8NService:
                 )
             
             except httpx.HTTPStatusError as e:
-                error_detail = ""
+                error_body = ""
                 try:
-                    error_detail = f" - {e.response.text[:200]}"
+                    error_body = e.response.text[:500]
                 except:
                     pass
-                
+                logger.error(f"[N8N] HTTP {e.response.status_code} error | body: {error_body}")
                 return ChatbotResponse(
                     success=False,
-                    error=f"Error del servicio de chatbot: {e.response.status_code}{error_detail}"
+                    error=f"Error del servicio de chatbot: {e.response.status_code} - {error_body}"
                 )
             
             except httpx.RequestError as e:

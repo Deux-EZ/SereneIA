@@ -57,6 +57,7 @@ export interface Conversation {
   updatedAt: string;
   messageCount: number;
   lastMessage?: Message;
+  lastMessagePreview?: string;
 }
 
 export interface ChatbotResponse {

@@ -10,11 +10,12 @@ import type { Conversation, Message, ChatbotResponse } from '../types';
 function transformConversation(backendConv: any): Conversation {
   return {
     id: backendConv.id,
-    userId: '', // Will be filled from user context
+    userId: '',
     title: backendConv.title || 'Nueva conversación',
     createdAt: backendConv.createdAt,
     updatedAt: backendConv.updatedAt || backendConv.createdAt,
-    messageCount: 0, // Will be calculated from messages
+    messageCount: 0,
+    lastMessagePreview: backendConv.lastMessagePreview || undefined,
   };
 }
 

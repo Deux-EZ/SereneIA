@@ -11,18 +11,18 @@ interface ChatWindowProps {
 }
 
 // Welcome message when starting a new conversation
-const WELCOME_MESSAGE: Message = {
+const createWelcomeMessage = (convId = ''): Message => ({
   id: 'welcome',
-  conversationId: '',
+  conversationId: convId,
   role: 'assistant',
   content: '¡Hola! 👋 Soy SerenAI, tu asistente de bienestar emocional. Estoy aquí para escucharte y acompañarte. ¿Cómo te sientes hoy?',
   timestamp: new Date().toISOString(),
-};
+});
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   
   const { 
     messages, 
@@ -52,7 +52,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       loadMessages();
     } else {
       // Show welcome message for new conversations
-      setMessages([WELCOME_MESSAGE]);
+      setMessages([createWelcomeMessage()]);
     }
   }, [conversationId]);
 
@@ -69,7 +69,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       const msgs = await chatService.getMessages(conversationId);
       if (msgs.length === 0) {
         // Show welcome for empty conversations
-        setMessages([{ ...WELCOME_MESSAGE, conversationId }]);
+        setMessages([createWelcomeMessage(conversationId)]);
       } else {
         setMessages(msgs);
       }
@@ -97,6 +97,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
     // Optimistically add user message
     addMessage(userMessage);
     setInput('');
+    // Reset textarea height
+    if (inputRef.current) inputRef.current.style.height = 'auto';
     setSending(true);
     setError(null);
 
@@ -155,6 +157,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
           <span>{error}</span>
           <button 
             onClick={() => setError(null)}
+            aria-label="Cerrar error"
             className="text-red-500 hover:text-red-700"
           >
             ✕
@@ -194,16 +197,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       <form onSubmit={handleSendMessage} className="border-t border-amber-200/50 p-4 md:p-6 bg-gradient-to-r from-amber-50/80 to-rose-50/80 backdrop-blur-md">
         <div className="flex gap-3 items-end">
           <div className="flex-1 relative">
-            <input
+            <textarea
               ref={inputRef}
-              type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 2000) setInput(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
               placeholder="Escribe cómo te sientes hoy... 💭"
               disabled={isSending}
-              className="w-full px-5 py-4 pr-12 rounded-2xl border-2 border-amber-200/70 bg-white/90 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-300 disabled:opacity-50 shadow-md hover:shadow-lg transition-all duration-300 text-base"
+              rows={1}
+              maxLength={2000}
+              className="w-full px-5 py-4 pr-12 rounded-2xl border-2 border-amber-200/70 bg-white/90 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-300 disabled:opacity-50 shadow-md hover:shadow-lg transition-all duration-300 text-base resize-none overflow-hidden"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
+            <div className="absolute right-4 top-4 text-gray-300">
               <Sparkles size={18} className={input.trim() ? 'text-purple-400' : ''} />
             </div>
           </div>
@@ -382,6 +396,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     <p className="font-semibold text-sm mb-1 truncate">
                       {conv.title || 'Nueva conversación'}
                     </p>
+                    {conv.lastMessagePreview && (
+                      <p className={`text-xs mb-1 truncate ${
+                        selectedId === conv.id ? 'text-purple-100' : 'text-gray-500'
+                      }`}>
+                        {conv.lastMessagePreview.slice(0, 60)}{conv.lastMessagePreview.length > 60 ? '...' : ''}
+                      </p>
+                    )}
                     <p className={`text-xs ${
                       selectedId === conv.id ? 'text-purple-100' : 'text-gray-400'
                     }`}>

@@ -10,8 +10,8 @@ interface AuthFormProps {
 
 export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('admin@sereneia.com'); // Default email for testing
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -125,7 +125,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isLogin, onToggle }) => {
             <Sparkles size={16} className="mt-0.5 flex-shrink-0 text-amber-500" />
             <span>
               {isLogin ? (
-                <>✨ Prueba con: <strong className="text-rose-600">admin@sereneia.com</strong> / <strong className="text-purple-600">admin123</strong></>
+                <>✨ Ingresa tus credenciales para acceder</>
               ) : (
                 <>🔐 Usa mínimo 8 caracteres para tu contraseña</>
               )}

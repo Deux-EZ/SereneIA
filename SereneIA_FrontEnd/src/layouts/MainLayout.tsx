@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { LogOut, Menu, FileText, User } from 'lucide-react';
-import { Button } from '../components/Common';
 import { useAuth } from '../hooks/useAuth';
 import { useUIStore } from '../store';
 
@@ -35,7 +34,6 @@ const UserAvatar: React.FC<{ avatar?: string; username?: string }> = ({ avatar, 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs, onToggleSidebar }) => {
   const { user, logout } = useAuth();
   useUIStore(); // Just to maintain store connection
-  const [openMobileMenu, setOpenMobileMenu] = useState(false);
 
   const handleLogout = async () => {
     if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
@@ -48,6 +46,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs, on
       {/* Mobile Menu Button */}
       <button
         onClick={() => onToggleSidebar?.()}
+        aria-label="Abrir menú de conversaciones"
         className="fixed top-4 left-4 z-50 md:hidden bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2.5 rounded-xl shadow-lg"
       >
         <Menu size={22} />
@@ -106,24 +105,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs, on
         {children}
       </main>
 
-      {/* Mobile Menu */}
-      {openMobileMenu && (
-        <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setOpenMobileMenu(false)}>
-          <div className="absolute top-16 left-0 right-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                onShowDocs();
-                setOpenMobileMenu(false);
-              }}
-              className="w-full"
-            >
-              <FileText size={18} /> Documentation
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

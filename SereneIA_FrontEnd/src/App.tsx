@@ -70,6 +70,13 @@ function AppContent() {
     }
   };
 
+  // If authenticated but still on auth/landing view, switch to app
+  useEffect(() => {
+    if (isAuthenticated && currentView !== 'app') {
+      setCurrentView('app');
+    }
+  }, [isAuthenticated, currentView]);
+
   // Handle conversation selection
   const handleSelectConversation = (id: string) => {
     setSelectedConversation(id);
@@ -84,11 +91,6 @@ function AppContent() {
   // Auth page
   if (currentView === 'auth' && !isAuthenticated) {
     return <AuthPage onBack={() => setCurrentView('landing')} />;
-  }
-
-  // If authenticated but still on auth/landing view, switch to app
-  if (isAuthenticated && currentView !== 'app') {
-    setCurrentView('app');
   }
 
   // Main app (authenticated)

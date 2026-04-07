@@ -44,16 +44,18 @@ const errorLink = onError((errorResponse: any) => {
         `[GraphQL Error] Message: ${err.message}, Path: ${err.path}`,
       );
       
-      // Si el token expiró o es inválido, limpiar sesión
-      if (
+      // Si el token expiró o es inválido, limpiar sesión y redirigir a login
+      const isAuthError =
         err.message.includes('Token inválido') ||
         err.message.includes('Token expirado') ||
-        err.message.includes('No autenticado')
-      ) {
+        err.message.includes('No autenticado') ||
+        err.message.includes('token') ||
+        (err.extensions?.code as string)?.includes('AUTHENTICATION') ||
+        err.extensions?.code === 'UNAUTHENTICATED';
+
+      if (isAuthError) {
         localStorage.removeItem('sereneia_token');
         localStorage.removeItem('sereneia-auth');
-        
-        // Redirigir a login (el componente se encargará)
         window.dispatchEvent(new CustomEvent('auth:logout'));
       }
     }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Menu, X, FileText, User } from 'lucide-react';
+import { LogOut, Menu, FileText, User } from 'lucide-react';
 import { Button } from '../components/Common';
 import { useAuth } from '../hooks/useAuth';
 import { useUIStore } from '../store';

@@ -19,6 +19,9 @@ Tablas en Backend (sereneia_users):
 Tablas en N8N (n8n):
 - n8n_chat_histories: Mensajes de conversación (session_id = conversation.id)
 """
+import logging
+import time
+import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -29,6 +32,13 @@ from app.core.config import settings
 from app.core.init import startup_tasks, shutdown_tasks
 from app.core.exceptions import AppException
 from app.graphql import graphql_router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("sereneia")
 
 
 @asynccontextmanager
@@ -75,6 +85,31 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def logging_middleware(request: Request, call_next):
+    request_id = str(uuid.uuid4())[:8]
+    start = time.time()
+
+    # Extraer usuario del header Authorization si existe
+    auth = request.headers.get("authorization", "")
+    user_hint = "anon"
+    if auth.startswith("Bearer "):
+        user_hint = f"jwt:{auth[7:15]}..."
+
+    logger.info(
+        f"[{request_id}] → {request.method} {request.url.path} | "
+        f"ip={request.client.host} | user={user_hint}"
+    )
+
+    response = await call_next(request)
+    elapsed = round((time.time() - start) * 1000)
+
+    logger.info(
+        f"[{request_id}] ← {response.status_code} | {elapsed}ms"
+    )
+    return response
 
 
 # ========================

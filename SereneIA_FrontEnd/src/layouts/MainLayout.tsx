@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { LogOut, Menu, FileText, User } from 'lucide-react';
+import React from 'react';
+import { LogOut, Menu, FileText, GraduationCap } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useUIStore } from '../store';
 
@@ -9,27 +9,12 @@ interface MainLayoutProps {
   onToggleSidebar?: () => void;
 }
 
-// Componente Avatar con fallback a icono
-const UserAvatar: React.FC<{ avatar?: string; username?: string }> = ({ avatar, username }) => {
-  const [imgError, setImgError] = useState(false);
-
-  if (!avatar || imgError) {
-    return (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 flex items-center justify-center ring-2 ring-purple-300 shadow-lg">
-        <User size={20} className="text-white" />
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={avatar}
-      alt={username || 'Usuario'}
-      className="w-10 h-10 rounded-full ring-2 ring-purple-300 shadow-lg object-cover"
-      onError={() => setImgError(true)}
-    />
-  );
-};
+// Componente Avatar — siempre gorrito de estudiante, sin carga de URLs
+const UserAvatar: React.FC<{ username?: string }> = () => (
+  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 flex items-center justify-center ring-2 ring-purple-300 shadow-lg">
+    <GraduationCap size={20} className="text-white" />
+  </div>
+);
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs, onToggleSidebar }) => {
   const { user, logout } = useAuth();
@@ -80,7 +65,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, onShowDocs, on
             {user && (
               <>
                 <div className="relative">
-                  <UserAvatar avatar={user.avatar} username={user.username} />
+                  <UserAvatar username={user.username} />
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
                 </div>
                 <span className="hidden sm:inline text-sm font-semibold text-gray-700">

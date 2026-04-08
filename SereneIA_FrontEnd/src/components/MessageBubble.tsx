@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Bot, User } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import type { Message } from '../types';
 
 interface MessageBubbleProps {
@@ -9,36 +9,32 @@ interface MessageBubbleProps {
   userName?: string;
 }
 
+// Avatar SerenAI — SVG corazón inline, nunca falla
+const SerenAIAvatar: React.FC = () => (
+  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 via-amber-400 to-purple-500 flex items-center justify-center shadow-md border-2 border-amber-300">
+    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+    </svg>
+  </div>
+);
+
+// Avatar usuario — gorrito de estudiante, sin carga de URL
+const UserAvatarBubble: React.FC<{ name?: string }> = ({ name: _name }) => (
+  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md border-2 border-purple-300">
+    <GraduationCap size={20} className="text-white" />
+  </div>
+);
+
 // Componente para renderizar el avatar
 const Avatar: React.FC<{ 
   isUser: boolean; 
   avatar?: string; 
   name?: string;
-}> = ({ isUser, avatar, name }) => {
+}> = ({ isUser, name }) => {
   if (isUser) {
-    if (avatar) {
-      return (
-        <img 
-          src={avatar} 
-          alt={name || 'Usuario'} 
-          className="w-10 h-10 rounded-full object-cover border-2 border-purple-300 shadow-md"
-        />
-      );
-    }
-    // Avatar por defecto para usuario
-    return (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md border-2 border-purple-300">
-        <User size={20} className="text-white" />
-      </div>
-    );
+    return <UserAvatarBubble name={name} />;
   }
-  
-  // Avatar de SerenAI (bot)
-  return (
-    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-rose-400 flex items-center justify-center shadow-md border-2 border-amber-300 animate-pulse-slow">
-      <Bot size={20} className="text-white" />
-    </div>
-  );
+  return <SerenAIAvatar />;
 };
 
 // Componente principal del mensaje
@@ -172,8 +168,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 export const TypingIndicator: React.FC = () => (
   <div className="flex gap-3 animate-fade-in">
     <div className="flex-shrink-0 mt-1">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-rose-400 flex items-center justify-center shadow-md border-2 border-amber-300 animate-pulse">
-        <Bot size={20} className="text-white" />
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 via-amber-400 to-purple-500 flex items-center justify-center shadow-md border-2 border-amber-300 animate-pulse">
+        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
       </div>
     </div>
     <div className="flex flex-col items-start">

@@ -145,9 +145,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 : 'text-gray-400 border-amber-200/50'
             }
           `}>
-            {new Date(message.timestamp).toLocaleTimeString([], { 
+            {new Date(message.timestamp).toLocaleTimeString('es-CO', { 
               hour: '2-digit', 
-              minute: '2-digit' 
+              minute: '2-digit',
+              hour12: false,
+              timeZone: 'America/Bogota'
             })}
             {isPending && (
               <span className="ml-2 inline-flex items-center gap-1">

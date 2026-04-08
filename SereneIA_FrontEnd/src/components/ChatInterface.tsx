@@ -406,11 +406,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     <p className={`text-xs ${
                       selectedId === conv.id ? 'text-purple-100' : 'text-gray-400'
                     }`}>
-                      {new Date(conv.updatedAt).toLocaleDateString('es-ES', { 
+                      {new Date(conv.updatedAt).toLocaleDateString('es-CO', { 
                         day: 'numeric', 
                         month: 'short',
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: 'America/Bogota'
                       })}
                     </p>
                   </div>
